@@ -10,92 +10,134 @@ namespace GuessThatNumber
     {
         //this is the number the user needs to guess.  Set its value in your code using a RNG.
         static int NumberToGuess = 0;
-
+        static string UserNumberString = null;
+        static int publicUserNumber = 0;
+        static int newestDifference = 0;
         static void Main(string[] args)
         {
-            Random rng = new Random();
-            bool isPlaying = true;
-            string numberString = null;
-            int userNumber = 0;
-            Console.Write("\nPlease enter an integer between 1 and 100: ");
-            numberString = Console.ReadLine();
-            SetNumberToGuess(rng.Next(1, 101));
 
-            while (isPlaying)
+            Random rand = new Random();
+            SetNumberToGuess(rand.Next(1, 101));
+            bool looping = true;
+            string keepPlaying = null;
+            int oldDifference = 0;
+
+            while (looping == true)
             {
-                if (ValidateInput(numberString) == false)
+                while (ValidateInput(UserNumberString) == false)
                 {
-                    Console.WriteLine("That is not a valid entry!");
-                    Console.Write("\nPlease enter an integer between 1 and 100: ");
-                    numberString = Console.ReadLine();
+                    UserInput();
                 }
-                else if (ValidateInput(numberString) == true)
+
+                if (ValidateInput(UserNumberString) == true)
                 {
-
-                    userNumber = int.Parse(numberString);
-                    while (userNumber != NumberToGuess)
+                    while (publicUserNumber != NumberToGuess)
                     {
-
-                        if (IsGuessTooHigh(userNumber) == true)
+                        if (IsGuessTooHigh(publicUserNumber))
                         {
-                            Console.WriteLine("\nYour guess is too high!");
-                            Console.Write("Please try again: ");
-                            numberString = Console.ReadLine();
-                            userNumber = int.Parse(numberString);
-                        }
-                        else if (IsGuessTooLow(userNumber) == true)
-                        {
-                            Console.WriteLine("Your guess is too low!");
-                            Console.WriteLine("Please try again: ");
-                            numberString = Console.ReadLine();
-                            userNumber = int.Parse(numberString);
-                        }
 
+                            while (oldDifference == 0)
+                            {
+                                Console.WriteLine("\nYour guess is too high. Guess again: ");
+                                oldDifference = publicUserNumber - NumberToGuess;
+                                UserInput();
+                            }
+                            if (GettingWarmer(oldDifference))
+                            {
+                                Console.WriteLine("\nGetting warmer! Guess again: ");
+                                UserInput();
+                            }
+                            else if (GettingColder(oldDifference))
+                            {
+                                Console.WriteLine("\nGetting colder! Guess again: ");
+                                UserInput();
+                            }
+                            oldDifference = newestDifference;
+
+
+                        }
+                        else if (IsGuessTooLow(publicUserNumber))
+                        {
+                            while (oldDifference == 0)
+                            {
+                                Console.WriteLine("\nYour guess is too low. Guess again: ");
+                                oldDifference = NumberToGuess - publicUserNumber;
+                                UserInput();
+                            }
+                            if (GettingColder(oldDifference))
+                            {
+                                Console.WriteLine("You're getting colder! Try again: ");
+                                UserInput();
+                            }
+                            else if (GettingWarmer(oldDifference))
+                            {
+                                Console.WriteLine("You're getting warmer! Try again: ");
+                                UserInput();
+                            }
+                            oldDifference = newestDifference;
+                        }
                     }
                 }
-                isPlaying = false;
+                Console.WriteLine("You guessed it! My number is {0}!", NumberToGuess);
+                Console.WriteLine("Would you like to play again? Y/N");
+                keepPlaying = Console.ReadLine().ToUpper();
+                switch (keepPlaying)
+                {
+                    case "Y":
+                        SetNumberToGuess(rand.Next(1, 101));
+                        UserInput();
+                        break;
+                    case "N":
+                        looping = false;
+                        break;
+                    default:
+                        Console.WriteLine("Please select a valid option: \nPlay again? Y/N");
+                        keepPlaying = Console.ReadLine().ToUpper();
+                        break;
+                }
             }
-
-            Console.WriteLine("You guessed it! My number was {0}", NumberToGuess);
+            Console.WriteLine("Thanks for playing!");
             Console.ReadKey();
-
         }
+
+
 
         public static bool ValidateInput(string userInput)
         {
-            int validNumber = 0;
-            int.TryParse(userInput, out validNumber);
+            int userNumber = 0;
+            int.TryParse(userInput, out userNumber);
 
-
-            if (validNumber > 100 || validNumber < 0)
+            if (userNumber > 0 && userNumber < 100)
             {
-                return false;
-            }
-            else if (validNumber == 0)
-            {
-                return false;
-            }
-            else if (validNumber < 100 || validNumber > 0)
-            {
-
+                publicUserNumber = userNumber;
                 return true;
-            }
 
+            }
 
             //check to make sure that the users input is a valid number between 1 and 100.
             return false;
         }
+        public static void UserInput()
+        {
+            Console.WriteLine("Please enter a number between 1 and 100: ");
+            UserNumberString = Console.ReadLine();
+            while (ValidateInput(UserNumberString) == false)
+            {
+                Console.WriteLine("\nPlease enter a valid input.");
+                Console.WriteLine("Please enter a number between 1 and 100: ");
+                UserNumberString = Console.ReadLine();
+            }
+
+        }
         public static void SetNumberToGuess(int number)
         {
+            NumberToGuess = number;
 
             //TODO: make this function override your global variable holding the number the user needs to guess.  This is used only for testing methods.
-            NumberToGuess = number;
         }
 
         public static bool IsGuessTooHigh(int userGuess)
         {
-            
-            
             //TODO: return true if the number guessed by the user is too high
             if (userGuess > NumberToGuess)
             {
@@ -105,6 +147,44 @@ namespace GuessThatNumber
             return false;
         }
 
+        public static bool GettingColder(int oldDifference)
+        {
+            if (NumberToGuess > publicUserNumber)
+            {
+                newestDifference = NumberToGuess - publicUserNumber;
+            }
+            else
+            {
+                newestDifference = publicUserNumber - NumberToGuess;
+            }
+
+            if (oldDifference < newestDifference)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public static bool GettingWarmer(int oldDifference)
+        {
+
+            if (NumberToGuess > publicUserNumber)
+            {
+                newestDifference = NumberToGuess - publicUserNumber;
+            }
+            else
+            {
+                newestDifference = publicUserNumber - NumberToGuess;
+            }
+
+            if (oldDifference > newestDifference)
+            {
+                return true;
+            }
+            return false;
+
+        }
+
         public static bool IsGuessTooLow(int userGuess)
         {
             //TODO: return true if the number guessed by the user is too low
@@ -112,6 +192,7 @@ namespace GuessThatNumber
             {
                 return true;
             }
+
             return false;
         }
     }
